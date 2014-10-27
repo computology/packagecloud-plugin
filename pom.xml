@@ -18,13 +18,13 @@
     </license>
   </licenses>
 
-    <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
+  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
 
   <pluginRepositories>
     <pluginRepository>
@@ -33,17 +33,21 @@
     </pluginRepository>
   </pluginRepositories>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>credentials</artifactId>
-            <version>1.14</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.packagecloud</groupId>
-            <artifactId>client</artifactId>
-            <version>1.0.7</version>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
+      <version>1.14</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.directory.studio</groupId>
+      <artifactId>org.apache.commons.io</artifactId>
+      <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>io.packagecloud</groupId>
+      <artifactId>client</artifactId>
+      <version>1.0.7</version>
+    </dependency>
+  </dependencies>
 </project>
