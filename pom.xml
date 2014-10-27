@@ -18,6 +18,21 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Joe Damato</name>
+      <email>joe@packagecloud.io</email>
+      <organization>Computology, LLC</organization>
+      <organizationUrl>https://packagecloud.io</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/packagecloud-plugin</url>
+  </scm>
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
