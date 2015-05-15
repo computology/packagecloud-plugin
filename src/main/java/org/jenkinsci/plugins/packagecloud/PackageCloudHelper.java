@@ -32,15 +32,6 @@ public class PackageCloudHelper {
     }
 
     /**
-     * Gets credentials.
-     *
-     * @return the credentials
-     */
-    public List<UsernamePasswordCredentials> getCredentials() {
-        return getCredentials("packagecloud.io");
-    }
-
-    /**
      * Gets credentials for user.
      *
      * @param username the username
@@ -59,10 +50,6 @@ public class PackageCloudHelper {
 
     public Connection getConnectionForHostAndPort(String hostname, String port, String protocol){
         return new Connection(hostname, Integer.valueOf(port), protocol);
-    }
-
-    public Connection getDefaultConnection() {
-        return getConnectionForHostAndPort("packagecloud.io", "443", "https");
     }
 
     /**

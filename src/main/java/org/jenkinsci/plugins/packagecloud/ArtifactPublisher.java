@@ -39,6 +39,9 @@ public class ArtifactPublisher extends Notifier {
      * @param username the username
      * @param repository the repository
      * @param distro the distro
+     * @param hostname the hostname
+     * @param port the port
+     * @param protocol the protocol
      */
 // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
@@ -302,7 +305,7 @@ public class ArtifactPublisher extends Notifier {
          * Validates we can find credentials for this username
          *
          * @param value the username
-         * @param hostname the username
+         * @param hostname the hostname
          * @return validation result
          */
         public FormValidation doCheckUsername(@QueryParameter String value, @QueryParameter String hostname) {
@@ -345,6 +348,10 @@ public class ArtifactPublisher extends Notifier {
          * Since the username is not known (or needed) to retrieve distributions, we iterate through all available credentials
          * until we find a working token.
          *
+         * @param hostname the hostname
+         * @param port the port
+         * @param protocol the protocol
+         * @param username the username
          * @return the list box model
          */
         public ListBoxModel doFillDistroItems(@QueryParameter("hostname") String hostname,
