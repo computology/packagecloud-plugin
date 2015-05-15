@@ -358,8 +358,14 @@ public class ArtifactPublisher extends Notifier {
                 return items;
             } else {
                 UsernamePasswordCredentials credentials = packageCloudHelper.getCredentialsForUser(username, hostname);
-                Connection connection = packageCloudHelper.getConnectionForHostAndPort(hostname, port, protocol);
-                return findDistroItems(credentials, connection);
+                if(credentials == null){
+                    ListBoxModel items = new ListBoxModel();
+                    items.add(String.format("Couldn't find credentials for %s@%s", username, hostname));
+                    return items;
+                } else {
+                    Connection connection = packageCloudHelper.getConnectionForHostAndPort(hostname, port, protocol);
+                    return findDistroItems(credentials, connection);
+                }
             }
         }
     }
