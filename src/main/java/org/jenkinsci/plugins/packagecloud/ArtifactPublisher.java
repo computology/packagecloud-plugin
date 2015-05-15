@@ -19,7 +19,6 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.*;
 
 /**
@@ -30,6 +29,9 @@ public class ArtifactPublisher extends Notifier {
     private final String repository;
     private final String username;
     private final String distro;
+    private final String hostname;
+    private final String port;
+    private final String protocol;
 
     /**
      * Instantiates a new Artifact publisher.
@@ -37,13 +39,19 @@ public class ArtifactPublisher extends Notifier {
      * @param username the username
      * @param repository the repository
      * @param distro the distro
+     * @param hostname the hostname
+     * @param port the port
+     * @param protocol the protocol
      */
 // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ArtifactPublisher(String username, String repository, String distro) {
+    public ArtifactPublisher(String username, String repository, String distro, String hostname, String port, String protocol) {
         this.username = username;
         this.repository = repository;
         this.distro = distro;
+        this.hostname = hostname;
+        this.port = port;
+        this.protocol = protocol;
     }
 
     /**
@@ -70,6 +78,21 @@ public class ArtifactPublisher extends Notifier {
      */
     public String getUsername() {
         return this.username;
+    }
+
+    /**
+     * Gets hostname.
+     *
+     * @return the hostname
+     */
+    public String getHostname() { return this.hostname; }
+
+    public String getPort() {
+        return this.port;
+    }
+
+    public String getProtocol() {
+        return this.protocol;
     }
 
     /**
@@ -132,9 +155,10 @@ public class ArtifactPublisher extends Notifier {
 
         Collection<Fingerprint> buildFingerprints = build.getBuildFingerprints();
 
-        UsernamePasswordCredentials credentials = packageCloudHelper.getCredentialsForUser(this.getUsername());
+        UsernamePasswordCredentials credentials = packageCloudHelper.getCredentialsForUser(this.getUsername(), this.getHostname());
 
-        PackageCloud packageCloud = packageCloudHelper.configuredClient(credentials);
+        Connection connection = packageCloudHelper.getConnectionForHostAndPort(this.getHostname(), this.getPort(), this.getProtocol());
+        PackageCloud packageCloud = packageCloudHelper.configuredClient(credentials, connection);
 
         List<Fingerprint> rejectedFingerprints = new ArrayList<Fingerprint>();
         List<Package> packagesToUpload = new ArrayList<Package>();
@@ -281,32 +305,19 @@ public class ArtifactPublisher extends Notifier {
          * Validates we can find credentials for this username
          *
          * @param value the username
+         * @param hostname the hostname
          * @return validation result
          */
-        public FormValidation doCheckUsername(@QueryParameter String value) {
-            if (packageCloudHelper.getCredentialsForUser(value) == null) {
-                return FormValidation.error("Can't find packagecloud.io credentials for this username");
+        public FormValidation doCheckUsername(@QueryParameter String value, @QueryParameter String hostname) {
+            if (packageCloudHelper.getCredentialsForUser(value, hostname) == null) {
+                return FormValidation.error(String.format("Can't find %s credentials for this username", hostname));
             } else {
                 return FormValidation.ok();
             }
         }
 
-        /**
-         * Validates existence of credentials to load distributions.
-         *
-         * @param value form value (ignored)
-         * @return validation result
-         */
-        public FormValidation doCheckDistro(@QueryParameter String value) {
-            if (packageCloudHelper.getCredentials().isEmpty()) {
-                return FormValidation.error("Can't find any valid packagecloud.io credentials, unable to load distributions");
-            } else {
-                return FormValidation.ok();
-            }
-        }
-
-        private ListBoxModel findDistroItems(UsernamePasswordCredentials credentials) throws Exception {
-            PackageCloud packageCloud = packageCloudHelper.configuredClient(credentials);
+        private ListBoxModel findDistroItems(UsernamePasswordCredentials credentials, Connection connection) throws Exception {
+            PackageCloud packageCloud = packageCloudHelper.configuredClient(credentials, connection);
             ListBoxModel items = new ListBoxModel();
 
             Distributions distributions = packageCloud.getDistributions();
@@ -337,23 +348,32 @@ public class ArtifactPublisher extends Notifier {
          * Since the username is not known (or needed) to retrieve distributions, we iterate through all available credentials
          * until we find a working token.
          *
+         * @param hostname the hostname
+         * @param port the port
+         * @param protocol the protocol
+         * @param username the username
          * @return the list box model
          */
-        public ListBoxModel doFillDistroItems() throws Exception {
-            List<UsernamePasswordCredentials> allCredentials = packageCloudHelper.getCredentials();
+        public ListBoxModel doFillDistroItems(@QueryParameter("hostname") String hostname,
+                                              @QueryParameter("port") String port,
+                                              @QueryParameter("protocol") String protocol,
+                                              @QueryParameter("username") String username) throws Exception {
 
-            for(UsernamePasswordCredentials credentials: allCredentials) {
-                try {
-                    return findDistroItems(credentials);
-                } catch (UnauthorizedException e){
-                    System.out.println("org.jenkinsci.plugins.packagecloud.ArtifactPublisher#doFillDistroItems: Credentials invalid, trying another, if available");
+            if (username.equals("")){
+                ListBoxModel items = new ListBoxModel();
+                items.add("Please enter username to load distributions", "-1");
+                return items;
+            } else {
+                UsernamePasswordCredentials credentials = packageCloudHelper.getCredentialsForUser(username, hostname);
+                if(credentials == null){
+                    ListBoxModel items = new ListBoxModel();
+                    items.add(String.format("Couldn't find credentials for %s@%s", username, hostname));
+                    return items;
+                } else {
+                    Connection connection = packageCloudHelper.getConnectionForHostAndPort(hostname, port, protocol);
+                    return findDistroItems(credentials, connection);
                 }
             }
-
-            // If we make it this far, we haven't found anything
-            ListBoxModel items = new ListBoxModel();
-            items.add("No distributions found", "-1");
-            return items;
         }
     }
 }
