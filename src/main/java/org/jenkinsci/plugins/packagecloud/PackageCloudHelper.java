@@ -23,12 +23,12 @@ public class PackageCloudHelper {
      *
      * @return the credentials
      */
-    public List<UsernamePasswordCredentials> getCredentials() {
+    public List<UsernamePasswordCredentials> getCredentials(String domain) {
         return CredentialsProvider.lookupCredentials(
                 UsernamePasswordCredentials.class,
                 Jenkins.getInstance(),
                 ACL.SYSTEM,
-                new HostnameRequirement("packagecloud.io"));
+                new HostnameRequirement(domain));
     }
 
     /**
@@ -37,15 +37,19 @@ public class PackageCloudHelper {
      * @param username the username
      * @return the credentials for user
      */
-    public UsernamePasswordCredentials getCredentialsForUser(String username) {
+    public UsernamePasswordCredentials getCredentialsForUser(String username, String domain) {
         UsernamePasswordCredentials matchingCred = null;
 
-        for(UsernamePasswordCredentials cred : getCredentials()){
+        for(UsernamePasswordCredentials cred : getCredentials(domain)){
             if(cred.getUsername().equals(username)){
                 matchingCred = cred;
             }
         }
         return matchingCred;
+    }
+
+    public Connection getConnectionForHostAndPort(String hostname, String port, String protocol){
+        return new Connection(hostname, Integer.valueOf(port), protocol);
     }
 
     /**
@@ -54,9 +58,9 @@ public class PackageCloudHelper {
      * @param creds the creds
      * @return the package cloud
      */
-    public PackageCloud configuredClient(UsernamePasswordCredentials creds){
+    public PackageCloud configuredClient(UsernamePasswordCredentials creds, Connection connection){
         Credentials pcloudCreds = new Credentials(creds.getUsername(), creds.getPassword().getPlainText());
-        return new PackageCloud(new Client(pcloudCreds));
+        return new PackageCloud(new Client(pcloudCreds, connection));
     }
 
 }

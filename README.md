@@ -1,7 +1,7 @@
 packagecloud.io Plugin
 ---------------------
 
-Integrates packagecloud.io package reppository hosting with Jenkins
+Integrates packagecloud.io package repository hosting with Jenkins
 
 Code & Bugs
 -----------
