@@ -228,15 +228,15 @@ public class ArtifactPublisher extends Notifier {
                 FilePath filePath = new FilePath(build.getWorkspace(), expanded);
 
                 if (fin.getDisplayName().endsWith("dsc")) {
-                    Package p = new Package(IOUtils.toByteArray(filePath.read()), this.getRepository(), Integer.valueOf(this.getDistro()));
+                    Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 } else if (this.getDistro().equals("gem")){
-                    Package p = new Package(IOUtils.toByteArray(filePath.read()), this.getRepository());
+                    Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository());
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 } else {
-                    Package p = new Package(filePath.read(), this.getRepository(), Integer.valueOf(this.getDistro()));
+                    Package p = new Package(fin.getDisplayName(), filePath.read(), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 }
@@ -335,6 +335,11 @@ public class ArtifactPublisher extends Notifier {
                 }
             }
             for (Distribution dist : distributions.dsc) {
+                for (Version version : dist.versions) {
+                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
+                }
+            }
+            for (Distribution dist : distributions.py) {
                 for (Version version : dist.versions) {
                     items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
                 }
