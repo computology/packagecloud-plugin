@@ -339,22 +339,17 @@ public class ArtifactPublisher extends Notifier {
 
             items.add("Gem", "gem");
 
+            for (Distribution dist : distributions.py) {
+                for (Version version : dist.versions) {
+                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
+                }
+            }
             for (Distribution dist : distributions.rpm) {
                 for (Version version : dist.versions) {
                     items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
                 }
             }
             for (Distribution dist : distributions.deb) {
-                for (Version version : dist.versions) {
-                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
-                }
-            }
-            for (Distribution dist : distributions.dsc) {
-                for (Version version : dist.versions) {
-                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
-                }
-            }
-            for (Distribution dist : distributions.py) {
                 for (Version version : dist.versions) {
                     items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
                 }
