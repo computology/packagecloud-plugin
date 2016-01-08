@@ -32,6 +32,7 @@ public class ArtifactPublisher extends Notifier {
     private final String hostname;
     private final String port;
     private final String protocol;
+    private final String repositoryOwner;
 
     /**
      * Instantiates a new Artifact publisher.
@@ -42,16 +43,18 @@ public class ArtifactPublisher extends Notifier {
      * @param hostname the hostname
      * @param port the port
      * @param protocol the protocol
+     * @param repositoryOwner the repository owner (for collab)
      */
 // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ArtifactPublisher(String username, String repository, String distro, String hostname, String port, String protocol) {
+    public ArtifactPublisher(String username, String repository, String distro, String hostname, String port, String protocol, String repositoryOwner) {
         this.username = username;
         this.repository = repository;
         this.distro = distro;
         this.hostname = hostname;
         this.port = port;
         this.protocol = protocol;
+        this.repositoryOwner = repositoryOwner;
     }
 
     /**
@@ -60,6 +63,14 @@ public class ArtifactPublisher extends Notifier {
      */
     public String getRepository() {
         return this.repository;
+    }
+
+    /**
+     * We'll use this from the <tt>config.jelly</tt>.
+     * @return the repository owner
+     */
+    public String getRepositoryOwner() {
+        return this.repositoryOwner;
     }
 
     /**
@@ -178,7 +189,11 @@ public class ArtifactPublisher extends Notifier {
     private void uploadAllPackages(AbstractBuild<?, ?> build, BuildListener listener, PackageCloud packageCloud, List<Package> packagesToUpload) {
         for (Package pkg : packagesToUpload) {
             try {
-                packageCloud.putPackage(pkg);
+                if (getRepositoryOwner() == null || getRepositoryOwner().isEmpty()) {
+                    packageCloud.putPackage(pkg);
+                } else {
+                    packageCloud.putPackage(pkg, repositoryOwner);
+                }
             } catch (Exception e) {
                 build.setResult(Result.FAILURE);
                 logger(listener, "ERROR  " + e.getMessage());
@@ -228,15 +243,15 @@ public class ArtifactPublisher extends Notifier {
                 FilePath filePath = new FilePath(build.getWorkspace(), expanded);
 
                 if (fin.getDisplayName().endsWith("dsc")) {
-                    Package p = new Package(IOUtils.toByteArray(filePath.read()), this.getRepository(), Integer.valueOf(this.getDistro()));
+                    Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 } else if (this.getDistro().equals("gem")){
-                    Package p = new Package(IOUtils.toByteArray(filePath.read()), this.getRepository());
+                    Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository());
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 } else {
-                    Package p = new Package(filePath.read(), this.getRepository(), Integer.valueOf(this.getDistro()));
+                    Package p = new Package(fin.getDisplayName(), filePath.read(), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
                     packagesToUpload.add(p);
                 }
@@ -324,17 +339,17 @@ public class ArtifactPublisher extends Notifier {
 
             items.add("Gem", "gem");
 
+            for (Distribution dist : distributions.py) {
+                for (Version version : dist.versions) {
+                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
+                }
+            }
             for (Distribution dist : distributions.rpm) {
                 for (Version version : dist.versions) {
                     items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
                 }
             }
             for (Distribution dist : distributions.deb) {
-                for (Version version : dist.versions) {
-                    items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
-                }
-            }
-            for (Distribution dist : distributions.dsc) {
                 for (Version version : dist.versions) {
                     items.add(dist.displayName + " (" + version.displayName + ")", String.valueOf(version.id));
                 }

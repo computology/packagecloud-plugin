@@ -12,7 +12,11 @@
     <f:textbox default="packagecloud.io" />
   </f:entry>
 
-  <f:entry title="Username" field="username">
+  <f:entry title="Username (must match username in Jenkins Credentials)" field="username">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="Repository Owner (for collaborators, leave blank otherwise)" field="repositoryOwner">
     <f:textbox />
   </f:entry>
 
