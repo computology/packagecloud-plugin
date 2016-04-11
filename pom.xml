@@ -8,7 +8,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>packagecloud</artifactId>
-  <version>1.5</version>
+  <version>1.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Packagecloud+Plugin</url>
 
@@ -32,7 +32,7 @@
     <connection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/packagecloud-plugin</url>
-    <tag>packagecloud-1.5</tag>
+    <tag>packagecloud-1.4</tag>
   </scm>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
