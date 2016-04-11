@@ -28,4 +28,8 @@
      <f:select  default="Loading..." />
   </f:entry>
 
+  <f:entry title="Verbose Logging" field="verbose">
+    <f:checkbox/>
+  </f:entry>
+
 </j:jelly>

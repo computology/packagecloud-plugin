@@ -17,6 +17,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -31,6 +34,7 @@ public class ArtifactPublisher extends Notifier {
     private final String distro;
     private final String hostname;
     private final String port;
+    private final Boolean verbose;
     private final String protocol;
     private final String repositoryOwner;
 
@@ -44,15 +48,17 @@ public class ArtifactPublisher extends Notifier {
      * @param port the port
      * @param protocol the protocol
      * @param repositoryOwner the repository owner (for collab)
+     * @param verbose if verbose
      */
 // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ArtifactPublisher(String username, String repository, String distro, String hostname, String port, String protocol, String repositoryOwner) {
+    public ArtifactPublisher(String username, String repository, String distro, String hostname, String port, String protocol, String repositoryOwner, Boolean verbose) {
         this.username = username;
         this.repository = repository;
         this.distro = distro;
         this.hostname = hostname;
         this.port = port;
+        this.verbose = verbose;
         this.protocol = protocol;
         this.repositoryOwner = repositoryOwner;
     }
@@ -106,6 +112,10 @@ public class ArtifactPublisher extends Notifier {
         return this.protocol;
     }
 
+    public Boolean getVerbose() {
+        return this.verbose;
+    }
+
     /**
      * Hold an instance of the Descriptor implementation of this publisher.
      */
@@ -132,8 +142,21 @@ public class ArtifactPublisher extends Notifier {
         return result;
     }
 
+    private String logFormat(String message){
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        String date = sdf.format(cal.getTime());
+        return String.format("%s [org.jenkinsci.plugins.packagecloud.ArtifactPublisher] %s", date, message);
+    }
+
     private void logger(BuildListener listener, String message){
-        listener.getLogger().println(String.format("[org.jenkinsci.plugins.packagecloud.ArtifactPublisher] %s", message));
+        listener.getLogger().println(logFormat(message));
+    }
+
+    private void verboseLogger(BuildListener listener, String message){
+        if (this.verbose){
+            logger(listener, message);
+        }
     }
 
     /**
@@ -149,6 +172,7 @@ public class ArtifactPublisher extends Notifier {
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        verboseLogger(listener, "Verbose Logging Enabled");
 
         PackageCloudHelper packageCloudHelper = new PackageCloudHelper();
 
@@ -156,6 +180,8 @@ public class ArtifactPublisher extends Notifier {
             // build failed. don't post
             return true;
         }
+
+        verboseLogger(listener, String.format("Build Status: %s", build.getResult().toString()));
 
         EnvVars envVars = build.getEnvironment(listener);
 
@@ -165,6 +191,8 @@ public class ArtifactPublisher extends Notifier {
                 getUsername()));
 
         Collection<Fingerprint> buildFingerprints = build.getBuildFingerprints();
+
+        verboseLogger(listener, String.format("Fingerprinting: found %d fingerprints", buildFingerprints.size()));
 
         UsernamePasswordCredentials credentials = packageCloudHelper.getCredentialsForUser(this.getUsername(), this.getHostname());
 
@@ -183,17 +211,22 @@ public class ArtifactPublisher extends Notifier {
         // final phase: upload all packages
         uploadAllPackages(build, listener, packageCloud, packagesToUpload);
 
+        verboseLogger(listener, "Done");
         return true;
     }
 
     private void uploadAllPackages(AbstractBuild<?, ?> build, BuildListener listener, PackageCloud packageCloud, List<Package> packagesToUpload) {
+        verboseLogger(listener, "Uploading packages (uploadAllPackages)");
+
         for (Package pkg : packagesToUpload) {
             try {
+                verboseLogger(listener, String.format("Uploading package: %s...", pkg.getFilename()));
                 if (getRepositoryOwner() == null || getRepositoryOwner().isEmpty()) {
                     packageCloud.putPackage(pkg);
                 } else {
                     packageCloud.putPackage(pkg, repositoryOwner);
                 }
+                verboseLogger(listener, String.format("Finished uploading package: %s", pkg.getFilename()));
             } catch (Exception e) {
                 build.setResult(Result.FAILURE);
                 logger(listener, "ERROR  " + e.getMessage());
@@ -236,6 +269,7 @@ public class ArtifactPublisher extends Notifier {
     }
 
     private void findValidPackages(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, Collection<Fingerprint> buildFingerprints, List<Fingerprint> rejectedFingerprints, List<Package> packagesToUpload) throws IOException {
+        verboseLogger(listener, "Finding valid Packages (findValidPackages)");
         for (Fingerprint fin : buildFingerprints) {
             if(isSupportedPackage(fin.getDisplayName())){
                 logger(listener, "Processing: " + fin.getDisplayName());
@@ -245,14 +279,17 @@ public class ArtifactPublisher extends Notifier {
                 if (fin.getDisplayName().endsWith("dsc")) {
                     Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
+                    verboseLogger(listener, String.format("Adding DSC: %s to packages to upload", fin.getDisplayName()));
                     packagesToUpload.add(p);
                 } else if (this.getDistro().equals("gem")){
                     Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository());
                     p.setFilename(fin.getDisplayName());
+                    verboseLogger(listener, String.format("Adding GEM: %s to packages to upload", fin.getDisplayName()));
                     packagesToUpload.add(p);
                 } else {
                     Package p = new Package(fin.getDisplayName(), filePath.read(), this.getRepository(), Integer.valueOf(this.getDistro()));
                     p.setFilename(fin.getDisplayName());
+                    verboseLogger(listener, String.format("Adding %s to packages to upload with Distro: %s", fin.getDisplayName(), this.getDistro()));
                     packagesToUpload.add(p);
                 }
             } else {
