@@ -181,7 +181,9 @@ public class ArtifactPublisher extends Notifier {
             return true;
         }
 
-        verboseLogger(listener, String.format("Build Status: %s", build.getResult().toString()));
+        if (build.getResult() != null) {
+          verboseLogger(listener, String.format("Build Status: %s", build.getResult().toString()));
+        }
 
         EnvVars envVars = build.getEnvironment(listener);
 
