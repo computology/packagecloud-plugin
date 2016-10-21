@@ -176,12 +176,18 @@ public class ArtifactPublisher extends Notifier {
 
         PackageCloudHelper packageCloudHelper = new PackageCloudHelper();
 
-        if (build.getResult() == Result.FAILURE || build.getResult() == Result.ABORTED) {
+        Result result = build.getResult();
+
+        if (result == null){
+            throw new RuntimeException("BuildResult is null!");
+        }
+
+        if (result == Result.FAILURE || result == Result.ABORTED) {
             // build failed. don't post
             return true;
         }
 
-        verboseLogger(listener, String.format("Build Status: %s", build.getResult().toString()));
+        verboseLogger(listener, String.format("Build Status: %s", result.toString()));
 
         EnvVars envVars = build.getEnvironment(listener);
 
