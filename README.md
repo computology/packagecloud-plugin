@@ -31,3 +31,4 @@ $ mvn release:prepare release:perform
 Maintainer
 ----------
 Joe Damato <joe@packagecloud.io>
+Julio Capote <julio@packagecloud.io>
