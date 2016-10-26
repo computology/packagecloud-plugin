@@ -38,7 +38,7 @@
 
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
+    <developerConnection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/packagecloud-plugin</url>
     <tag>packagecloud-1.9</tag>
   </scm>
