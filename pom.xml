@@ -16,7 +16,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>packagecloud</artifactId>
-  <version>1.9</version>
+  <version>1.9-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Packagecloud+Plugin</url>
 
@@ -37,8 +37,8 @@
   </developers>
 
   <scm>
-    <connection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</connection>
-    <developerConnection>scm:git:ssh://github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
+    <connection>scm:git:ssh://git@github.com/jenkinsci/packagecloud-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/packagecloud-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/packagecloud-plugin</url>
     <tag>packagecloud-1.9</tag>
   </scm>
