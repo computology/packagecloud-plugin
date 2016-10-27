@@ -16,7 +16,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>packagecloud</artifactId>
-  <version>1.10-SNAPSHOT</version>
+  <version>1.9</version>
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Packagecloud+Plugin</url>
 
