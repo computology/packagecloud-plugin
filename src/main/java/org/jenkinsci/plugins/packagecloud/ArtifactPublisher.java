@@ -142,7 +142,7 @@ public class ArtifactPublisher extends Notifier {
         return result;
     }
 
-    private String logFormat(String message){
+    public static String logFormat(String message){
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         String date = sdf.format(cal.getTime());
@@ -150,7 +150,7 @@ public class ArtifactPublisher extends Notifier {
     }
 
     private void logger(BuildListener listener, String message){
-        listener.getLogger().println(logFormat(message));
+        listener.getLogger().println(ArtifactPublisher.logFormat(message));
     }
 
     private void verboseLogger(BuildListener listener, String message){
@@ -215,6 +215,11 @@ public class ArtifactPublisher extends Notifier {
         hydrateDebianSourcePackages(build, listener, envVars, packageCloud, rejectedFingerprints, packagesToUpload);
 
         // final phase: upload all packages
+        if (this.verbose) {
+            ProgressLogger progressLogger = new ProgressLogger(listener);
+            Client client = packageCloud.getClient();
+            client.setProgressListener(progressLogger);
+        }
         uploadAllPackages(build, listener, packageCloud, packagesToUpload);
 
         verboseLogger(listener, "Done");
