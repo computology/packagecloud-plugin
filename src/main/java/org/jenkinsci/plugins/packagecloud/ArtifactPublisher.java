@@ -260,9 +260,17 @@ public class ArtifactPublisher extends Notifier {
             Contents contents = packageCloud.packageContents(pkg);
             // search the workspace for the files we need
             for (File file : contents.files) {
-                for (FilePath path : build.getWorkspace().list(file.filename)) {
-                    logger(listener, "found dsc component " + path.getName());
-                    sourceFiles.put(file.filename, path.read());
+                if (build != null) {
+                    FilePath workspace = build.getWorkspace();
+                    String filename = file.filename;
+                    if (workspace != null){
+                        FilePath[] files = workspace.list(filename);
+                        for (FilePath path : files) {
+                            logger(listener, "found dsc component " + path.getName());
+                            sourceFiles.put(filename, path.read());
+                        }
+
+                    }
                 }
             }
         } catch (Exception e) {
