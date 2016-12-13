@@ -205,14 +205,13 @@ public class ArtifactPublisher extends Notifier {
         Connection connection = packageCloudHelper.getConnectionForHostAndPort(this.getHostname(), this.getPort(), this.getProtocol());
         PackageCloud packageCloud = packageCloudHelper.configuredClient(credentials, connection);
 
-        List<Fingerprint> rejectedFingerprints = new ArrayList<Fingerprint>();
         List<Package> packagesToUpload = new ArrayList<Package>();
 
         // first pass: separate valid packages from non supported packages
-        findValidPackages(build, listener, envVars, buildFingerprints, rejectedFingerprints, packagesToUpload);
+        findValidPackages(build, listener, envVars, buildFingerprints, packagesToUpload);
 
         // second pass: hydrate any detected dsc's with their respective sourceFiles
-        hydrateDebianSourcePackages(build, listener, envVars, packageCloud, rejectedFingerprints, packagesToUpload);
+        hydrateDebianSourcePackages(build, listener, envVars, packageCloud, packagesToUpload);
 
         // final phase: upload all packages
         if (this.verbose) {
@@ -245,31 +244,26 @@ public class ArtifactPublisher extends Notifier {
         }
     }
 
-    private void hydrateDebianSourcePackages(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, PackageCloud packageCloud, List<Fingerprint> rejectedFingerprints, List<Package> packagesToUpload) throws IOException {
+    private void hydrateDebianSourcePackages(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, PackageCloud packageCloud, List<Package> packagesToUpload) throws IOException {
         for (Package pkg : packagesToUpload) {
             if(pkg.getFilename().endsWith("dsc")){
-                hydrateDebianSourcePackage(build, listener, envVars, packageCloud, rejectedFingerprints, pkg);
+                hydrateDebianSourcePackage(build, listener, envVars, packageCloud, pkg);
             }
         }
     }
 
-    private void hydrateDebianSourcePackage(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, PackageCloud packageCloud, List<Fingerprint> rejectedFingerprints, Package pkg) throws IOException {
+    private void hydrateDebianSourcePackage(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, PackageCloud packageCloud, Package pkg) throws IOException {
         Map<String, InputStream> sourceFiles = new HashMap<String, InputStream>();
         logger(listener, "Detected dsc (debian source) file");
         try {
             pkg.getFilestream().mark(0);
             Contents contents = packageCloud.packageContents(pkg);
-            // find the files we need from the rejected fingerprints
+            // search the workspace for the files we need
             for (File file : contents.files) {
-                for (Fingerprint fin : rejectedFingerprints) {
-                    if (fin.getDisplayName().equals(file.filename)){
-                        logger(listener, "found dsc component " + fin.getDisplayName());
-                        String expanded = Util.replaceMacro(fin.getFileName(), envVars);
-                        FilePath filePath = new FilePath(build.getWorkspace(), expanded);
-                        sourceFiles.put(fin.getDisplayName(), filePath.read());
-                    }
+                for (FilePath path : build.getWorkspace().list(file.filename)) {
+                    logger(listener, "found dsc component " + path.getName());
+                    sourceFiles.put(file.filename, path.read());
                 }
-
             }
         } catch (Exception e) {
             build.setResult(Result.FAILURE);
@@ -279,10 +273,10 @@ public class ArtifactPublisher extends Notifier {
         pkg.setSourceFiles(sourceFiles);
     }
 
-    private void findValidPackages(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, Collection<Fingerprint> buildFingerprints, List<Fingerprint> rejectedFingerprints, List<Package> packagesToUpload) throws IOException {
+    private void findValidPackages(AbstractBuild<?, ?> build, BuildListener listener, EnvVars envVars, Collection<Fingerprint> buildFingerprints, List<Package> packagesToUpload) throws IOException {
         verboseLogger(listener, "Finding valid Packages (findValidPackages)");
         for (Fingerprint fin : buildFingerprints) {
-            if(isSupportedPackage(fin.getDisplayName())){
+            if(isSupportedPackage(fin.getDisplayName())) {
                 logger(listener, "Processing: " + fin.getDisplayName());
                 String expanded = Util.replaceMacro(fin.getFileName(), envVars);
                 FilePath filePath = new FilePath(build.getWorkspace(), expanded);
@@ -292,7 +286,7 @@ public class ArtifactPublisher extends Notifier {
                     p.setFilename(fin.getDisplayName());
                     verboseLogger(listener, String.format("Adding DSC: %s to packages to upload", fin.getDisplayName()));
                     packagesToUpload.add(p);
-                } else if (this.getDistro().equals("gem")){
+                } else if (this.getDistro().equals("gem")) {
                     Package p = new Package(fin.getDisplayName(), IOUtils.toByteArray(filePath.read()), this.getRepository());
                     p.setFilename(fin.getDisplayName());
                     verboseLogger(listener, String.format("Adding GEM: %s to packages to upload", fin.getDisplayName()));
@@ -303,8 +297,6 @@ public class ArtifactPublisher extends Notifier {
                     verboseLogger(listener, String.format("Adding %s to packages to upload with Distro: %s", fin.getDisplayName(), this.getDistro()));
                     packagesToUpload.add(p);
                 }
-            } else {
-                rejectedFingerprints.add(fin);
             }
         }
     }
