@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1.14</version>
+      <version>1337.v60b_d7b_c7b_c9f</version>
     </dependency>
     <dependency>
       <groupId>org.apache.directory.studio</groupId>
